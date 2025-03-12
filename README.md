@@ -53,8 +53,3 @@ Bu tool eğitim ve güvenlik araştırmaları için tasarlanmıştır
 
                   Katkıda Bulunma
                   Geliştirmeler ve hata raporları için GitHub üzerinden pull request oluşturabilirsiniz.
-
-![1](https://github.com/user-attachments/assets/07685d7a-974e-4ff0-899f-a776b36f3527)
-
-![2](https://github.com/user-attachments/assets/4cb7ecc8-7ad5-4e1e-9c23-4895a12faeea)
-
