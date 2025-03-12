@@ -258,9 +258,9 @@ def get_interfaces():
     """Mevcut ağ arayüzlerini tespit et"""
     interfaces = []
     try:
-        # ifconfig çıktısını al
+        
         ifconfig_output = subprocess.check_output(["ifconfig"], text=True)
-        # Regex ile arayüzleri bul
+        
         interfaces = re.findall(r'^(\w+):', ifconfig_output, re.MULTILINE)
         return interfaces
     except subprocess.SubprocessError:
@@ -292,13 +292,13 @@ def change_mac(interface, new_mac):
     print(f"{Fore.YELLOW}[*] {interface} arayüzü için MAC adresini değiştirme: {new_mac}")
     
     try:
-        # İlk önce arayüzü devre dışı bırak
+        
         subprocess.check_output(["ifconfig", interface, "down"])
         
-        # MAC adresini değiştir
+       
         subprocess.check_output(["ifconfig", interface, "hw", "ether", new_mac])
         
-        # Arayüzü tekrar etkinleştir
+        
         subprocess.check_output(["ifconfig", interface, "up"])
         
         return True
@@ -334,9 +334,9 @@ def handle_keyboard():
 
 def generate_full_mac(oui):
     """OUI'dan tam bir MAC adresi oluştur"""
-    # Son 3 okteti rastgele oluştur
+    
     random_hex = [format(random.randint(0, 255), '02x') for _ in range(3)]
-    # OUI + rastgele oluşturulan son 3 oktet
+    
     full_mac = f"{oui}:{':'.join(random_hex)}"
     return full_mac
 
@@ -368,12 +368,12 @@ def show_manufacturer_ouis(manufacturer):
     ouis = MANUFACTURER_OUIS[manufacturer]
     print(f"\n{Fore.GREEN}[+] {manufacturer} üreticisinin OUI (ilk 3 oktet) listesi:")
     
-    # OUI listesini 5'li gruplar halinde yazdır
+    
     for i in range(0, len(ouis), 5):
         group = ouis[i:i+5]
         print(f"{Fore.WHITE}    {', '.join(group)}")
     
-    # Örnek tam MAC adresleri oluştur
+    
     print(f"\n{Fore.CYAN}[+] {manufacturer} için örnek MAC adresleri:")
     for _ in range(3):
         random_oui = random.choice(ouis)
@@ -386,20 +386,20 @@ def main():
     banner()
     check_root()
     
-    # Mevcut ağ arayüzlerini al
+    
     interfaces = get_interfaces()
     
     if not interfaces:
         print(f"{Fore.RED}[-] Hiçbir ağ arayüzü bulunamadı!")
         sys.exit(1)
     
-    # Arayüzleri kategorize et
+    
     eth_interfaces = [iface for iface in interfaces if iface.startswith('e')]
     wlan_interfaces = [iface for iface in interfaces if iface.startswith('w')]
     lo_interfaces = [iface for iface in interfaces if iface == 'lo']
     other_interfaces = [iface for iface in interfaces if not (iface in eth_interfaces or iface in wlan_interfaces or iface in lo_interfaces)]
     
-    # Kategorileri göster
+    
     print(f"\n{Fore.CYAN}[+] Mevcut ağ arayüzleri:")
     
     if eth_interfaces:
@@ -422,17 +422,17 @@ def main():
         for i, iface in enumerate(other_interfaces, 1):
             print(f"{Fore.WHITE}    {len(eth_interfaces) + len(wlan_interfaces) + len(lo_interfaces) + i}. {iface}")
     
-    # Tüm arayüzleri tek listede birleştir
+   
     all_interfaces = eth_interfaces + wlan_interfaces + lo_interfaces + other_interfaces
     
-    # Arayüz seçimi
+    
     while True:
         try:
             choice = int(input(f"\n{Fore.YELLOW}[?] Değiştirmek istediğiniz arayüzün numarasını girin: "))
             if 1 <= choice <= len(all_interfaces):
                 selected_interface = all_interfaces[choice-1]
                 
-                # Seçilen arayüzün tipini kontrol et
+                
                 if selected_interface.startswith('w') and not eth_interfaces:
                     print(f"{Fore.YELLOW}[!] Kablosuz arayüz seçtiniz. Ağınız kablosuz olabilir.")
                 elif selected_interface == 'lo':
@@ -444,7 +444,7 @@ def main():
         except ValueError:
             print(f"{Fore.RED}[-] Lütfen bir sayı girin!")
     
-    # Mevcut MAC adresini kaydet
+    
     original_mac = get_current_mac(selected_interface)
     if original_mac:
         print(f"{Fore.GREEN}[+] {selected_interface} arayüzünün orijinal MAC adresi: {original_mac}")
@@ -453,26 +453,25 @@ def main():
         print(f"{Fore.RED}[-] Bu arayüz MAC değiştirmeyi desteklemiyor olabilir.")
         sys.exit(1)
     
-    # Klavye dinleyicisini başlat
+    
     keyboard_thread = threading.Thread(target=handle_keyboard, daemon=True)
     keyboard_thread.start()
     
     print(f"\n{Fore.CYAN}[*] Not: İstediğiniz zaman {Fore.RED}[CTRL+K]{Fore.CYAN} tuşlarına basarak orijinal MAC adresine dönebilirsiniz.")
     
-    # Üretici seçimi
+    
     selected_manufacturer = select_manufacturer()
     print(f"{Fore.GREEN}[+] Seçilen üretici: {selected_manufacturer}")
     
-    # Seçilen üreticinin OUI'larını göster
+    
     show_manufacturer_ouis(selected_manufacturer)
     
-    # Kullanıcıdan MAC adresi al
     print(f"\n{Fore.YELLOW}[?] Yeni MAC adresini girin (örn: {random.choice(MANUFACTURER_OUIS[selected_manufacturer])}:XX:XX:XX):")
     while True:
         new_mac = input(f"{Fore.WHITE}>>> ")
         
         if validate_mac(new_mac):
-            # MAC'in ilk 3 okteti üreticiye ait mi kontrol et
+            
             oui = new_mac.split(':', 3)[0] + ':' + new_mac.split(':', 3)[1] + ':' + new_mac.split(':', 3)[2]
             if oui in MANUFACTURER_OUIS[selected_manufacturer]:
                 break
@@ -481,7 +480,7 @@ def main():
                 print(f"{Fore.YELLOW}[*] Lütfen şu OUI'lardan birini kullanın: {', '.join(MANUFACTURER_OUIS[selected_manufacturer][:3])}...")
                 print(f"{Fore.YELLOW}[?] MAC adresini tekrar girin veya rasgele {selected_manufacturer} MAC adresi için 'R' yazın:")
         elif new_mac.upper() == 'R':
-            # Rasgele bir MAC adresi oluştur
+            
             random_oui = random.choice(MANUFACTURER_OUIS[selected_manufacturer])
             new_mac = generate_full_mac(random_oui)
             print(f"{Fore.YELLOW}[*] Rasgele MAC adresi oluşturuldu: {new_mac}")
@@ -490,9 +489,9 @@ def main():
             print(f"{Fore.RED}[-] Geçersiz MAC adresi formatı! Doğru format: XX:XX:XX:XX:XX:XX")
             print(f"{Fore.YELLOW}[?] MAC adresini tekrar girin veya rasgele {selected_manufacturer} MAC adresi için 'R' yazın:")
     
-    # MAC adresini değiştir
+    
     if change_mac(selected_interface, new_mac):
-        # Değişikliği doğrula
+        
         new_current_mac = get_current_mac(selected_interface)
         if new_current_mac == new_mac:
             print(f"{Fore.GREEN}[+] MAC adresi başarıyla değiştirildi: {new_current_mac}")
@@ -505,7 +504,7 @@ def main():
     print(f"{Fore.CYAN}[*] Çıkmak için {Fore.RED}CTRL+C{Fore.CYAN} tuşlarına basın.")
     
     try:
-        # Ana thread'i açık tut
+        
         while True:
             time.sleep(1)
     except KeyboardInterrupt:
